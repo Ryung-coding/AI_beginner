@@ -28,18 +28,23 @@ arr_sort = np.array([[5,2,7],[4,3,6]])
 #igea molgga.. jom mianheajinea..
 
 #Ex1
+print("Practice 1")
 a = np.array([1,0,3])
 b = np.array([2,1,2])
-print(2*a+3*b)
+print("2a+3b =", 2*a+3*b)
+print("---------------------------")
 
 #Ex2
+print("Practice 2")
 x = np.array([1,2,3,-1])
 y = np.array([0,1,2,+1])
 z = np.array([2023,1,-1,+1])
-print(np.dot(x,y), np.dot(y,z))
+print("x.y=" , np.dot(x,y), "| y.z=" , np.dot(y,z))
+print("---------------------------")
 
 #Ex3
+print("Practice 3")
 arr_R3 = np.array([[11,10,3,4],[7,1,2,9],[6,8,5,12  ]])
-print(arr_R3)
+print("Original \n", arr_R3, "\n")
 buf = (np.sort(arr_R3.reshape(1,-1))).reshape(3,4)
-print(arr_R3.sum(axis=0), arr_R3.mean(axis=1), buf)
+print("Sum=", arr_R3.sum(axis=0), "| Mean=",arr_R3.mean(axis=1), "\nSORT\n", buf)
