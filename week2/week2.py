@@ -29,5 +29,5 @@ predict_all = s.predict(d.data)
 confusion_mat = np.zeros((3,3)) # To use a confusion_mat, we can ckeck the perfomance about trend(data&target)
 
 for i in range(0, len(predict_all)):
-    confusion_mat[predict_all[i], [d.target[i]]]+=1
+    confusion_mat[predict_all[i], d.target[i]]+=1
 print(confusion_mat)
