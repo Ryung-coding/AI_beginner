@@ -1,51 +1,28 @@
 import numpy as np
-from sklearn.linear_model import Perceptron
+from sklearn.neural_network import MLPClassifier
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
-# perceptron example
-sample = np.array([[1,0,0], [1,0,1], [1,1,0],[1,1,1]]) #have a feature
-weight = ([-0.5,1.0,1.0])
-output = np.sum(sample*weight, axis=1) #calculate the output using z=wx form
-print(output)
+#use MLP using MNIST dataset
+digit=datasets.load_digits()
 
-# perceptron baed on OR data using sklearn Lib
-x = [[0,0],[0,1],[1,0],[1,1]] #data
-y = [-1,1,1,1] #label or taget
+plt.figure(figsize=(5,5))
+plt.imshow(digit.images[0], cmap=plt.cm.gray_r, interpolation='nearest') #digit.images[i] => i-th gray image
+# plt.show()
 
-p=Perceptron()
-p.fit(x,y)
+x_train, x_test, y_train, y_test = train_test_split(digit.data,digit.target,train_size=0.6) 
 
-print("Parm: ",p.coef_,p.intercept_) # -> weight , bias (z=Wx+b form)
-print("Predict: ",p.predict(x))
-print("Score: ",p.score(x,y)*100,"%")
+# input data(8X8 image) -> hidden_layer_sizes (expend) -> output1 -> last_layer_size = output_class_number / in out case = 10
+#          64                       100                     100                     10                        =>64*100*100*10 
+mlp=MLPClassifier(hidden_layer_sizes=(100), learning_rate_init=0.001,batch_size=32, max_iter=300, solver='sgd', verbose=True)
+mlp.fit(x_train,y_train)
 
-# Use Train data and Test 
-digit = datasets.load_digits()
-x_train, x_test, y_train, y_test = train_test_split(digit.data,digit.target,train_size=0.6) # 60% training set / 40% testing set  
-
-p=Perceptron(max_iter=100,eta0=0.001,verbose=0) #model setting value
-p.fit(x_train,y_train) # learning about training set
-
-result_prediction = p.predict(x_test)
+result_prediction = mlp.predict(x_test)
 
 confusion_mat = np.zeros((10,10)) #check the performance using confusion_matrix
 for i in range (len(result_prediction)):
     confusion_mat[result_prediction[i], y_test[i]] +=1
 print(confusion_mat)
 print("accuracy",np.trace(confusion_mat)*100/confusion_mat.sum())
-
-# -------------------------------------------------> Ground Truth (target) axis=1
-# [[62.  0.  0.  0.  0.  0.  1.  0.  0.  0.]    |
-#  [ 0. 74.  0.  0.  0.  0.  0.  0.  1.  0.]    |
-#  [ 0.  2. 63.  1.  0.  0.  0.  0.  3.  0.]    |
-#  [ 0.  0.  2. 85.  0.  2.  0.  1.  4.  3.]    |
-#  [ 0.  2.  0.  0. 66.  0.  2.  0.  1.  0.]    |
-#  [ 1.  0.  0.  0.  0. 71.  0.  0.  0.  1.]    |
-#  [ 0.  2.  0.  0.  0.  1. 70.  0.  1.  0.]    |
-#  [ 0.  0.  0.  0.  0.  0.  0. 67.  1.  0.]    V  Preditied class axis=0
-#  [ 0.  0.  1.  0.  0.  0.  0.  0. 57.  0.]
-#  [ 0.  0.  0.  1.  1.  0.  0.  1.  1. 67.]]
-
-# have a off-digonal term => can't predit the targer!!
 
