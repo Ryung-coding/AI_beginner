@@ -1,38 +1,69 @@
+import os
+import matplotlib 
 import numpy as np
-from sklearn.neural_network import MLPClassifier
-from sklearn import datasets
-from sklearn.model_selection import train_test_split
-import matplotlib.pyplot as plt
 
-#use MLP using MNIST dataset
-digit=datasets.load_digits()
+matplotlib.use("Agg") # GPU 비활성화 (추후수정예정)
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # GPU 비활성화 (추후수정예정)
 
-plt.figure(figsize=(5,5))
-plt.imshow(digit.images[0], cmap=plt.cm.gray_r, interpolation='nearest') #digit.images[i] => i-th gray image
-# plt.show()
+import matplotlib.pyplot as plt # pip install matplotlib
+import tensorflow as tf  # pip install tensorflow
 
-x_train, x_test, y_train, y_test = train_test_split(digit.data,digit.target,train_size=0.6) 
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Flatten
+from tensorflow.keras.optimizers import Adam
 
-# input data(8X8 image) -> hidden_layer_sizes (expend) -> output1 -> last_layer_size = output_class_number / in out case = 10
-#          64                       100                     100                     10                        =>64*100*100*10 
-mlp=MLPClassifier(hidden_layer_sizes=(100), learning_rate_init=0.001,batch_size=32, max_iter=300, solver='sgd', verbose=True)
-hidden_layer_sizes=(100)
 
-# hidden_layer_sizes=(100)  ==> 은닉층 1개, 뉴런 100개
-# learning_rate_init=0.001  ==> 초기 학습률(η). solver='sgd'나 'adam'에서 사용. 너무 크면 발산, 너무 작으면 수렴 느림.
-# batch_size=32             ==> 한 번의 가중치 업데이트에 쓰는 샘플 수. solver='sgd'/'adam'에서만 의미 있음.
-# max_iter=300              ==> 에폭 수(전체 데이터셋을 1회 도는 횟수). 조기 종료가 없으면 최대 300에폭 학습.
-# solver='sgd'              => 'sgd': 확률적 경사하강법(+옵션으로 모멘텀/학습률 스케줄).
-                                # Note* 'adam': 보통 기본값 | 'lbfgs': 소규모 데이터에서 빠르게 수렴
-# verbose=True              ==> loss/상태를 로그로 출력.
+# Deep Learning Implementation
+(x_train, y_train), (x_test, y_test) = mnist.load_data() #load mnist dataset 
 
-mlp.fit(x_train,y_train)
+#set the structure 784(28X28 image) -> hidden(1024) -> output(10 class)
+n_input = 784
+n_hidden = 1024
+n_output = 10
 
-result_prediction = mlp.predict(x_test)
+x_train = x_train.reshape(60000,n_input) #60000 data 28*28 tensor -> 60000 data / 784 feature
+x_train = x_train.astype(np.float32)/255 # Nomalize [0~255] to [0,1]
 
-confusion_mat = np.zeros((10,10)) #check the performance using confusion_matrix
-for i in range (len(result_prediction)):
-    confusion_mat[result_prediction[i], y_test[i]] +=1
-print(confusion_mat)
-print("accuracy",np.trace(confusion_mat)*100/confusion_mat.sum())
+x_test = x_test.reshape(10000, n_input)
+x_test = x_test.astype(np.float32)/255
 
+y_train = tf.keras.utils.to_categorical(y_train,n_output)
+y_test = tf.keras.utils.to_categorical(y_test,n_output)
+
+
+mlp = Sequential()
+
+mlp.add(Dense(units=n_hidden, activation='tanh', input_shape=(n_input,), kernel_initializer='random_uniform', bias_initializer='zeros'))
+
+mlp.add(Dense(units=n_output, activation='tanh', kernel_initializer='random_uniform', bias_initializer='zeros'))
+
+mlp.compile(loss='mean_squared_error', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
+
+log = mlp.fit(x_train, y_train, batch_size=128, epochs=5, validation_data=(x_test, y_test), verbose=2)
+
+result = mlp.evaluate(x_test, y_test, verbose=0)
+
+print("정확률은", result[1] * 100)
+
+plt.plot(log.history['accuracy'])
+plt.plot(log.history['val_accuracy'])
+plt.title('Model accuracy')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.legend(['Train','Validation'], loc='upper left')
+plt.grid()
+plt.savefig('acc_curve.png', dpi=150, bbox_inches='tight')
+plt.close()
+
+plt.plot(log.history['loss'])
+plt.plot(log.history['val_loss'])
+plt.title('Model loss')
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
+plt.legend(['Train','Validation'], loc='upper right')
+plt.grid()
+plt.savefig('loss_curve.png', dpi=150, bbox_inches='tight')
+plt.close()
+
+print("saved: acc_curve.png, loss_curve.png")
