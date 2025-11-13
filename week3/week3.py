@@ -1,69 +1,62 @@
 import os
-import matplotlib 
+import matplotlib
 import numpy as np
 
-matplotlib.use("Agg") # GPU 비활성화 (추후수정예정)
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # GPU 비활성화 (추후수정예정)
+matplotlib.use("Agg")
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-import matplotlib.pyplot as plt # pip install matplotlib
-import tensorflow as tf  # pip install tensorflow
-
+import matplotlib.pyplot as plt
+import tensorflow as tf
 from tensorflow.keras.datasets import mnist
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Flatten
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
 from tensorflow.keras.optimizers import Adam
 
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-# Deep Learning Implementation
-(x_train, y_train), (x_test, y_test) = mnist.load_data() #load mnist dataset 
+x_train = x_train.reshape(60000, 28, 28, 1).astype(np.float32) / 255.0
+x_test  = x_test.reshape(10000, 28, 28, 1).astype(np.float32) / 255.0
+y_train = tf.keras.utils.to_categorical(y_train, 10)
+y_test  = tf.keras.utils.to_categorical(y_test, 10)
 
-#set the structure 784(28X28 image) -> hidden(1024) -> output(10 class)
-n_input = 784
-n_hidden = 1024
-n_output = 10
+cnn = Sequential()
 
-x_train = x_train.reshape(60000,n_input) #60000 data 28*28 tensor -> 60000 data / 784 feature
-x_train = x_train.astype(np.float32)/255 # Nomalize [0~255] to [0,1]
+cnn.add(Conv2D(6, (5,5), activation='tanh', padding='same',input_shape=(28,28,1),ernel_initializer='random_uniform', bias_initializer='zeros'))
+cnn.add(MaxPooling2D(pool_size=(2,2)))
 
-x_test = x_test.reshape(10000, n_input)
-x_test = x_test.astype(np.float32)/255
+cnn.add(Conv2D(16, (5,5), activation='tanh', padding='same',kernel_initializer='random_uniform', bias_initializer='zeros'))
+cnn.add(MaxPooling2D(pool_size=(2,2)))
 
-y_train = tf.keras.utils.to_categorical(y_train,n_output)
-y_test = tf.keras.utils.to_categorical(y_test,n_output)
+cnn.add(Conv2D(120, (5,5), activation='tanh', padding='valid',ernel_initializer='random_uniform', bias_initializer='zeros'))
+cnn.add(Flatten())
 
+cnn.add(Dense(84, activation='tanh',kernel_initializer='random_uniform', bias_initializer='zeros'))
+cnn.add(Dense(10, activation='tanh',kernel_initializer='random_uniform', bias_initializer='zeros'))
 
-mlp = Sequential()
-
-mlp.add(Dense(units=n_hidden, activation='tanh', input_shape=(n_input,), kernel_initializer='random_uniform', bias_initializer='zeros'))
-
-mlp.add(Dense(units=n_output, activation='tanh', kernel_initializer='random_uniform', bias_initializer='zeros'))
-
-mlp.compile(loss='mean_squared_error', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
-
-log = mlp.fit(x_train, y_train, batch_size=128, epochs=5, validation_data=(x_test, y_test), verbose=2)
-
-result = mlp.evaluate(x_test, y_test, verbose=0)
+cnn.compile(loss='mean_squared_error', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
+log = cnn.fit(x_train, y_train, batch_size=128, epochs=5, validation_data=(x_test, y_test), verbose=2)
+result = cnn.evaluate(x_test, y_test, verbose=0)
 
 print("정확률은", result[1] * 100)
 
 plt.plot(log.history['accuracy'])
 plt.plot(log.history['val_accuracy'])
-plt.title('Model accuracy')
+plt.title('Model accuracy (CNN)')
 plt.ylabel('Accuracy')
 plt.xlabel('Epoch')
 plt.legend(['Train','Validation'], loc='upper left')
 plt.grid()
-plt.savefig('acc_curve.png', dpi=150, bbox_inches='tight')
+plt.savefig('cnn_acc_curve.png', dpi=150, bbox_inches='tight')
 plt.close()
 
 plt.plot(log.history['loss'])
 plt.plot(log.history['val_loss'])
-plt.title('Model loss')
+plt.title('Model loss (CNN)')
 plt.ylabel('Loss')
 plt.xlabel('Epoch')
 plt.legend(['Train','Validation'], loc='upper right')
 plt.grid()
-plt.savefig('loss_curve.png', dpi=150, bbox_inches='tight')
+plt.savefig('cnn_loss_curve.png', dpi=150, bbox_inches='tight')
 plt.close()
 
-print("saved: acc_curve.png, loss_curve.png")
+print("saved: cnn_acc_curve.png, cnn_loss_curve.png")
