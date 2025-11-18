@@ -1,12 +1,9 @@
-import os
 import matplotlib
 import numpy as np
 
-matplotlib.use("Agg")
-os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
 import matplotlib.pyplot as plt
-import tensorflow as tf
+import tensorflow as tf # pip install --upgrade "tensorflow[and-cuda]"
+print("GPUs:", tf.config.list_physical_devices("GPU")) #chcek
 from tensorflow.keras.datasets import mnist
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense
@@ -21,13 +18,13 @@ y_test  = tf.keras.utils.to_categorical(y_test, 10)
 
 cnn = Sequential()
 
-cnn.add(Conv2D(6, (5,5), activation='tanh', padding='same',input_shape=(28,28,1),ernel_initializer='random_uniform', bias_initializer='zeros'))
+cnn.add(Conv2D(6, (5,5), activation='tanh', padding='same',input_shape=(28,28,1),kernel_initializer='random_uniform', bias_initializer='zeros'))
 cnn.add(MaxPooling2D(pool_size=(2,2)))
 
 cnn.add(Conv2D(16, (5,5), activation='tanh', padding='same',kernel_initializer='random_uniform', bias_initializer='zeros'))
 cnn.add(MaxPooling2D(pool_size=(2,2)))
 
-cnn.add(Conv2D(120, (5,5), activation='tanh', padding='valid',ernel_initializer='random_uniform', bias_initializer='zeros'))
+cnn.add(Conv2D(120, (5,5), activation='tanh', padding='valid',kernel_initializer='random_uniform', bias_initializer='zeros'))
 cnn.add(Flatten())
 
 cnn.add(Dense(84, activation='tanh',kernel_initializer='random_uniform', bias_initializer='zeros'))
@@ -59,4 +56,4 @@ plt.grid()
 plt.savefig('cnn_loss_curve.png', dpi=150, bbox_inches='tight')
 plt.close()
 
-print("saved: cnn_acc_curve.png, cnn_loss_curve.png")
+print("saved: cnn_acc_curve.png, cnn_loss_curve.png")     
