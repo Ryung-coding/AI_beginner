@@ -20,10 +20,10 @@ input_dim = 784
 num_classes = 10
 
 # 모델 설정
-hidden_dim = 200
+hidden_dim = 2000
 
 # 훈련 설정
-epochs = 30
+epochs = 60
 lr = 1e-2
 momentum = 0.9
 
@@ -75,6 +75,7 @@ test_dataset = test_dataset.batch(batch_size)
 # 모델 정의
 inputs = Input(shape=(input_dim,), name='input')
 x = Dense(hidden_dim, activation='relu', name='hidden1')(inputs)
+x = Dense(hidden_dim, activation='relu', name='hidden2')(x)
 x = Dense(num_classes, activation="softmax", name='output')(x)
 model = Model(inputs, x, name='mlp')
 
@@ -98,47 +99,34 @@ model.compile(optimizer=optimizer,
               metrics=[metric])
 
 # 모델 훈련
-history = model.fit(train_dataset, epochs=epochs, validation_data=valid_dataset)
+history = model.fit(train_dataset, epochs=epochs, validation_data=valid_dataset, verbose=1)
 
+train_result = model.evaluate(train_dataset, verbose=0)   # [loss, acc]
+valid_result = model.evaluate(valid_dataset, verbose=0)   # [loss, acc]
+test_result  = model.evaluate(test_dataset,  verbose=0)   # [loss, acc]
 
-losses = pd.DataFrame({
-    'train_loss': history.history['loss'], 
-    'valid_loss': history.history['val_loss'],
-})
-accuracies = pd.DataFrame({
-    'train_acc': history.history['categorical_accuracy'], 
-    'valid_acc': history.history['val_categorical_accuracy'],
-})
+print(f"Train  accuracy: {train_result[1] * 100:.2f}%")
+print(f"Valid  accuracy: {valid_result[1] * 100:.2f}%")
+print(f"Test   accuracy: {test_result[1] * 100:.2f}%")
 
-losses.plot(figsize=(8, 6))
-plt.grid(True)
-plt.gca().set_xlim(0, 15)
-plt.show()
+plt.plot(history.history['categorical_accuracy'])
+plt.plot(history.history['val_categorical_accuracy'])
+plt.title('Model accuracy (MLP))')
+plt.ylabel('Accuracy')
+plt.xlabel('Epoch')
+plt.legend(['Train','Validation'], loc='upper left')
+plt.grid()
+plt.savefig('60_MLP2_acc_curve.png', dpi=150, bbox_inches='tight')
+plt.close()
 
-accuracies.plot(figsize=(8, 6))
-plt.grid(True)
-plt.gca().set_xlim(0, 15)
-plt.show()
+plt.plot(history.history['loss'])
+plt.plot(history.history['val_loss'])
+plt.title('Model loss (MLP))')
+plt.ylabel('Loss')
+plt.xlabel('Epoch')
+plt.legend(['Train','Validation'], loc='upper right')
+plt.grid()
+plt.savefig('60_MLP2_loss_curve.png', dpi=150, bbox_inches='tight')
+plt.close()
 
-# 학습된 모델의 성능을 테스트 세트에서 평가합니다.
-model.evaluate(test_dataset)
-
-# Predict
-new_input = test_image[0, :, :]
-new_input = tf.cast(new_input, tf.float32) / 255.0
-new_input = tf.reshape(new_input, (1, 784))
-prediction = model.predict(new_input)
-
-# Visualize
-buf = 0
-for i in range(28):
-    x = ''
-    for j in range(28):
-        x += f'{test_image[0, i, j]:3} '
-    print(x)
-
-x = ''
-for i in range(10):
-    x += f'{prediction[0, i]:.2f} '
-print(x)
-
+print("saved: 60_MLP2_acc_curve.png, 60_MLP2_loss_curve.png")
