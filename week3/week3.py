@@ -1,4 +1,4 @@
-import matplotlib
+    import matplotlib
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -31,7 +31,7 @@ cnn.add(Dense(84, activation='tanh',kernel_initializer='random_uniform', bias_in
 cnn.add(Dense(10, activation='tanh',kernel_initializer='random_uniform', bias_initializer='zeros'))
 
 cnn.compile(loss='mean_squared_error', optimizer=Adam(learning_rate=0.001), metrics=['accuracy'])
-log = cnn.fit(x_train, y_train, batch_size=128, epochs=5, validation_data=(x_test, y_test), verbose=2)
+log = cnn.fit(x_train, y_train, batch_size=128, epochs=30, validation_data=(x_test, y_test), verbose=2)
 result = cnn.evaluate(x_test, y_test, verbose=0)
 
 print("정확률은", result[1] * 100)
